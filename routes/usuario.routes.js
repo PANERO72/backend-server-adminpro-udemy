@@ -12,23 +12,28 @@ var Usuario = require('../models/usuario');
 
 // Obtener usuario
 
-app.get('/', mdAutenticacion.verificarToken, (req, res, next) => {
-    Usuario.find({}, 'nombre email img role').exec( (err, usuarios) => {
+app.get('/', (req, res, next) => {
+    var desde = req.query.desde || 0;
+    desde = Number(desde);
+
+    Usuario.find({}, 'nombre email img role').skip(desde).limit(5).exec( (err, usuarios) => {
         if(err){
             return res.status(500).json({
                 ok: false, mensaje: 'Error al obtener usuarios.', errors: err
             });
         }
 
-        res.status(200).json({
-            ok: true, usuarios: usuarios
+        Usuario.count({}, (err, conteo) => {
+
+            res.status(200).json({
+                ok: true, usuarios: usuarios, total: conteo
+            });
         });
+
     });
 
     
 });
-
-
 
 // Actualizar un usuario
 app.put('/:id', mdAutenticacion.verificarToken, (req, res) => {
@@ -99,6 +104,12 @@ app.delete('/:id', mdAutenticacion.verificarToken, (req, res) => {
 
     Usuario.findByIdAndRemove(id, (err, usuarioEliminado) => {
          
+        if(err){
+            return res.status(500).json({
+                ok: false, mensaje: 'Error al eliminar usuario.', errors: err
+            });
+        }
+        
         if(!usuarioEliminado){
             return res.status(400).json({
                 ok: false, mensaje: 'No existe un usuario con es ID.', errors: { message: 'El usuario con el ID: ' + id + ' no existe.'}
