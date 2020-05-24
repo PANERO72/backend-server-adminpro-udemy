@@ -1,146 +1,164 @@
-var express = require('express');
-var fileUpload = require('express-fileupload');
+var express = require("express");
+var fileUpload = require("express-fileupload");
 var fs = require('fs');
-
 var app = express();
+
+// default options
+app.use(fileUpload());
 
 var Usuario = require('../models/usuario');
 var Medico = require('../models/medico');
 var Hospital = require('../models/hospital');
 
-app.use(fileUpload());
+app.put("/:tipo/:id", (req, res, next) => {
+  var tipo = req.params.tipo;
+  var id = req.params.id;
 
-
-app.put('/:tipo/:id', (req, res, next) => {
-
-    var tipo = req.params.tipo;
-    var id = req.params.id;
-
-    // Validar el tipo de colección
-    var tiposValidos = ['hospitales', 'medicos', 'usuarios'];
-
-    if(tiposValidos.indexOf(tipo) < 0){
-        return res.status(400).json({
-            ok: false, mensaje: 'El tipo de colección no es válido.', errors: { message: 'Los tipos de colección son: ' + tiposValidos.join(', ') + '.'}
-        });
-    }
-
-    if(!req.files){
-        return res.status(400).json({
-            ok: false, mensaje: 'No se subió nada.', errors: { message: 'Debe seleccionar una imagen.'}
-        });
-    }
-
-    // obtener nombre y tipo de la imagen
-    var archivo = req.files.imagen;
-    var nombreRecortado = archivo.name.split('.');
-    var extensionArchivo = nombreRecortado[nombreRecortado.length - 1];
-
-    // Solo aceptamos estas extensiones de archivo
-    var extensionesValidas = ['png', 'jpg', 'jpeg', 'gif', 'bmp'];
-
-    if (extensionesValidas.indexOf(extensionArchivo) < 0) {
-        return res.status(400).json({
-            ok: false, mensaje: 'La extensión de la imagen no es válida.', errors: { message: 'Las extensiones de imagen permitidas son: ' + extensionesValidas.join(', ') + '.'}
-        });
-    }
-
-    // Nombre personalizado de la imagen
-    var nombrePersonalizado = `${id}-${new Date().getMilliseconds()}.${extensionArchivo}`;
-
-    // Mover la imagen del temporal al destino
-    var ruta = `./uploads/${tipo}/${nombrePersonalizado}`;
-
-    archivo.mv(ruta, err => {
-        if(err){
-            return res.status(500).json({
-                ok: false, mensaje: 'Error al mover la imagen.', errors: err
-            });
-        }
-
-        subirImagenPorTipo(tipo, id, nombrePersonalizado, res);
-
-        // res.status(200).json({
-        //     ok: true, mensaje: 'La imagen fue movida con éxito.', extensionArchivo: extensionArchivo
-        // });
-
+  // tipos de colección
+  var tiposValidos = ['hospitales','medicos','usuarios'];
+  if(tiposValidos.indexOf(tipo)<0){
+    return res.status(400).json({
+      ok: false,
+      mensaje: "Tipo de colección no es válido.",
+      errors: { message: 'Tipo de colección permitidos son ' + tiposValidos + '.' }
     });
+  }
 
+  if(!req.files){
+    return res.status(400).json({
+      ok: false,
+      mensaje: "No se seleccionó nada.",
+      errors: {message:  'Debe de seleccionar una imagen.'}
+    });
+  }
+  // obtener nombre del archivo
+  var archivo = req.files.imagen;
+  var nombreCortado = archivo.name.split('.');
+  var extensionArchivo = nombreCortado[nombreCortado.length -1];
+
+  // validación de extenciones
+  var extensionesValidas = ['png','jpg','gif','jpeg'];
+  if(extensionesValidas.indexOf(extensionArchivo) <0){
+    return res.status(400).json({
+      ok: false,
+      mensaje: "Extensión de imagen no válida.",
+      errors: { message: 'Las extensiones de imagen permitidas son: ' + extensionesValidas.join(', ') + '.' }
+    });
+  }
+  // Nombre de archivo personalizado.
+  var nombreArchivo = `${id}-${new Date().getMilliseconds()}.${extensionArchivo}`;
+
+  // mover el archivo a un path
+  var path = `./uploads/${tipo}/${nombreArchivo}`;
+  archivo.mv(path, err=>{
+    if(err){
+      return res
+        .status(500)
+        .json({
+          ok: false,
+          mensaje: "Error al mover archivos.",
+          errors: err
+        });
+    }
+    subirPorTipo(tipo, id, nombreArchivo, res);
+    // res.status(200).json({
+    //   ok: true,
+    //   mensaje: "Archivo movido",
+    //   extension: extensionArchivo
+    // });
+  });
 });
 
-function subirImagenPorTipo(tipo, id, nombrePersonalizado, res){
-    if( tipo === 'usuarios'){
-        Usuario.findById(id, (err, usuario) => {
-            if(!usuario){
-                return res.status(200).json({
-                    ok: true, mensaje: 'El usuario no exite.', errors: {message: 'El usuario no exite.'}
-                });
-            }
-            
-            var rutaAntigua = './uploads/usuarios/' + usuario.img;
-
-            // Si exite la imagen antigua se eliminará
-            if(fs.existsSync(rutaAntigua)){
-                fs.unlinkSync(rutaAntigua);
-            }
-
-            usuario.img = nombrePersonalizado;
-
-            usuario.save((err, usuarioActualizado) => {
-                usuarioActualizado.password = '*****';
-                return res.status(200).json({
-                    ok: true, mensaje: 'La imagen del usuario fue actualizada con éxito.', usuario: usuarioActualizado
-                });
-            });
+function subirPorTipo(tipo, id, nombreArchivo, res){
+  if(tipo ==='usuarios'){
+    Usuario.findById(id, (err, usuario)=>{
+      if(!usuario){
+        return res.status(400).json({
+          ok: false,
+          mensaje: "El Usuario no existe.",
+          errors: {message: 'El Usuario no existe.'} 
         });
-    }
-    
-    if( tipo === 'hospitales'){
-        Hospital.findById(id, (err, hospital) => {
-            if(!hospital){
-                return res.status(200).json({
-                    ok: true, mensaje: 'El hospital no exite.', errors: {message: 'El hospital no exite.'}
-                });
-            }
-            
-            var rutaAntigua = './uploads/hospitales/' + hospital.img;
+      }
+      var pathViejo = '.uploads/usuarios/'+ usuario.img;
 
-            // Si exite la imagen antigua se eliminará
-            if(fs.existsSync(rutaAntigua)){
-                fs.unlinkSync(rutaAntigua);
-            }
-
-            hospital.img = nombrePersonalizado;
-            hospital.save((err, hospitaloActualizado) => {
-                return res.status(200).json({
-                    ok: true, mensaje: 'La imagen del hospìtal fue actualizada con éxito.', hospital: hospitaloActualizado
+      // si existe elimina la imagen anterior
+      if(fs.existsSync(pathViejo)){
+        fs.unlinkSync(pathViejo);
+      } 
+      usuario.img = nombreArchivo;
+      usuario.save((err, usuarioActualizado)=>{
+        usuarioActualizado.password = "****";
+       return  res.status(200).json({
+                ok: true,
+                mensaje: "Imagen de usuario actualizada.",
+                  usuario: usuarioActualizado
                 });
-            });
+      });
+    });
+  }
+  // fin de la verificación de usuarios
+  if(tipo === 'medicos'){
+    Medico.findById(id ,(err, medico)=>{
+      if (!medico) {
+        return res.status(400).json({
+          ok: false,
+          mensaje: "El Médico no existe.",
+          errors: { message: 'El Médico no existe.' }
         });
-    }
-    if( tipo === 'medicos'){
-        Medico.findById(id, (err, medico) => {
+      }
 
-            if(!medico){
-                return res.status(200).json({
-                    ok: true, mensaje: 'El médico no exite.', errors: {message: 'El médico no exite.'}
-                });
-            }
-            var rutaAntigua = './uploads/medicos/' + medico.img;
+      var pathViejo = '.uploads/medicos/' + medico.img;
 
-            // Si exite la imagen antigua se eliminará
-            if(fs.existsSync(rutaAntigua)){
-                fs.unlinkSync(rutaAntigua);
-            }
-
-            medico.img = nombrePersonalizado;
-            medico.save((err, medicoActualizado) => {
-                return res.status(200).json({
-                    ok: true, mensaje: 'La imagen del médico fue actualizada con éxito.', medico: medicoActualizado 
-                });
-            });
+      // si existe elimina la imagen anterior
+      if (fs.existsSync(pathViejo)) {
+        fs.unlink(pathViejo, (err) => {
+          console.log('Imagen del médico elimanda.');
         });
-    }
+      }
+      medico.img = nombreArchivo;
+
+      medico.save((err, medicoActualizado)=>{
+        return res.status(200).json({
+          ok: true,
+          mensaje: "Imagen de médico actualizado.",
+          medico: medicoActualizado
+        });
+      });
+    });
+  }
+  //Fin de la verificación de médicos
+  if(tipo === 'hospitales'){
+    Hospital.findById(id, (err, hospital)=>{
+      if (!hospital) {
+        return res
+          .status(400)
+          .json({
+            ok: false,
+            mensaje: "El Hospital no existe.",
+            errors: { message: "El Hospital no existe." }
+          });
+      }
+      var pathViejo = '.uploads/hospitales/' + hospital.img;
+
+      // si existe elimina la imagen anterior
+      if (fs.existsSync(pathViejo)) {
+        fs.unlink(pathViejo, (err) => {
+
+        });
+      }
+      hospital.img = nombreArchivo;
+
+      hospital.save((err, hospitalActualizado)=>{
+        return res.status(200).json({
+          ok: true,
+          mensaje: "Imagen del hospital actualizada.",
+          hospital: hospitalActualizado
+        });
+      });
+    });
+  }
+  //fin verificación de hospitales
+  // fin de la función 
 }
 
 module.exports = app;
