@@ -37,8 +37,8 @@ app.put("/:tipo/:id", (req, res, next) => {
   var extensionArchivo = nombreCortado[nombreCortado.length -1];
 
   // validación de extenciones
-  var extensionesValidas = ['png','jpg','gif','jpeg'];
-  if(extensionesValidas.indexOf(extensionArchivo) <0){
+  var extensionesValidas = ['png', 'jpg', 'gif', 'jpeg'];
+  if(extensionesValidas.indexOf(extensionArchivo) < 0){
     return res.status(400).json({
       ok: false,
       mensaje: "Extensión de imagen no válida.",
@@ -70,7 +70,7 @@ app.put("/:tipo/:id", (req, res, next) => {
 });
 
 function subirPorTipo(tipo, id, nombreArchivo, res){
-  if(tipo ==='usuarios'){
+  if(tipo === 'usuarios'){
     Usuario.findById(id, (err, usuario)=>{
       if(!usuario){
         return res.status(400).json({
@@ -79,7 +79,7 @@ function subirPorTipo(tipo, id, nombreArchivo, res){
           errors: {message: 'El Usuario no existe.'} 
         });
       }
-      var pathViejo = '.uploads/usuarios/'+ usuario.img;
+      var pathViejo = './uploads/usuarios/'+ usuario.img;
 
       // si existe elimina la imagen anterior
       if(fs.existsSync(pathViejo)){
@@ -88,11 +88,11 @@ function subirPorTipo(tipo, id, nombreArchivo, res){
       usuario.img = nombreArchivo;
       usuario.save((err, usuarioActualizado)=>{
         usuarioActualizado.password = "****";
-       return  res.status(200).json({
-                ok: true,
-                mensaje: "Imagen de usuario actualizada.",
-                  usuario: usuarioActualizado
-                });
+        return  res.status(200).json({
+          ok: true,
+          mensaje: "Imagen de usuario actualizada.",
+          usuario: usuarioActualizado
+        });
       });
     });
   }
@@ -107,7 +107,7 @@ function subirPorTipo(tipo, id, nombreArchivo, res){
         });
       }
 
-      var pathViejo = '.uploads/medicos/' + medico.img;
+      var pathViejo = './uploads/medicos/' + medico.img;
 
       // si existe elimina la imagen anterior
       if (fs.existsSync(pathViejo)) {
@@ -138,7 +138,7 @@ function subirPorTipo(tipo, id, nombreArchivo, res){
             errors: { message: "El Hospital no existe." }
           });
       }
-      var pathViejo = '.uploads/hospitales/' + hospital.img;
+      var pathViejo = './uploads/hospitales/' + hospital.img;
 
       // si existe elimina la imagen anterior
       if (fs.existsSync(pathViejo)) {
