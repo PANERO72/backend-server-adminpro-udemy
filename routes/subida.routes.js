@@ -19,8 +19,8 @@ app.put("/:tipo/:id", (req, res, next) => {
   if(tiposValidos.indexOf(tipo)<0){
     return res.status(400).json({
       ok: false,
-      mensaje: "Tipo de colección no es válido.",
-      errors: { message: 'Tipo de colección permitidos son ' + tiposValidos + '.' }
+      mensaje: "Tipo de colección no válido.",
+      errors: { message: 'Tipo de colección permitidos son: ' + tiposValidos.join(',') + '.' }
     });
   }
 
@@ -56,7 +56,7 @@ app.put("/:tipo/:id", (req, res, next) => {
         .status(500)
         .json({
           ok: false,
-          mensaje: "Error al mover archivos.",
+          mensaje: "Error al mover archivo.",
           errors: err
         });
     }
@@ -111,7 +111,7 @@ function subirPorTipo(tipo, id, nombreArchivo, res){
 
       // si existe elimina la imagen anterior
       if (fs.existsSync(pathViejo)) {
-        fs.unlink(pathViejo, (err) => {
+        fs.unlinkSync(pathViejo, (err) => {
           console.log('Imagen del médico elimanda.');
         });
       }
@@ -120,7 +120,7 @@ function subirPorTipo(tipo, id, nombreArchivo, res){
       medico.save((err, medicoActualizado)=>{
         return res.status(200).json({
           ok: true,
-          mensaje: "Imagen de médico actualizado.",
+          mensaje: "Imagen del médico actualizada.",
           medico: medicoActualizado
         });
       });
@@ -142,7 +142,7 @@ function subirPorTipo(tipo, id, nombreArchivo, res){
 
       // si existe elimina la imagen anterior
       if (fs.existsSync(pathViejo)) {
-        fs.unlink(pathViejo, (err) => {
+        fs.unlinkSync(pathViejo, (err) => {
 
         });
       }

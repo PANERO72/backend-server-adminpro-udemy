@@ -13,13 +13,13 @@ var SEED = require('../config/config').SEED;
 app.get("/", (req, res, next) => {
     var desde = req.query.desde || 0;
     desde = Number(desde);
-    Usuario.find({},'nombre email img role')
+    Usuario.find({},'_id nombre email img role google')
     .skip(desde)
     .limit(5)
     .exec(
     (err, usuarios) =>{
         if(err){
-            return res.status(500).json({
+            return res.status(400).json({
                 ok: false,
                 mensaje: "Error cargando usuarios.",
                 errors : err
@@ -36,12 +36,41 @@ app.get("/", (req, res, next) => {
 });
 
 //========================================================================
+// Crear un nuevo usuario
+//========================================================================  
+app.post("/" ,(req, res)=>{
+    var body = req.body;
+    var usuario = new Usuario({
+        nombre: body.nombre,
+        email: body.email,
+        password: bcrypt.hashSync(body.password, 10),
+        img: body.img,
+        role: body.role
+    });
+    usuario.save((err, usuarioGuardado)=>{
+        if (err) {
+            return res.status(500).json({
+                ok: false,
+                mensaje: "Error al crear usuario.",
+                errors: err
+            });
+        }
+        res.status(201).json({
+            ok: true,
+            usuario: usuarioGuardado,
+            usuariotoken: req.usuario 
+            });
+    });
+});
+
+//========================================================================
 // Actualizar usuario
 //========================================================================
-
 app.put('/:id', mdAutenticacion.verificaToken, (req, res) => {
+
     var id = req.params.id;
     var body = req.body;
+
     Usuario.findById(id, (err, usuario) => {
         if (err) {
             return res
@@ -77,41 +106,13 @@ app.put('/:id', mdAutenticacion.verificaToken, (req, res) => {
         });
     });
 });
-//========================================================================
-// Crear un nuevo usuario
-//========================================================================  
-
-app.post("/" ,(req, res)=>{
-    var body = req.body;
-    var usuario = new Usuario({
-        nombre: body.nombre,
-        email: body.email,
-        password: bcrypt.hashSync(body.password, 10),
-        img: body.img,
-        role: body.role
-    });
-    usuario.save((err, usuarioGuardado)=>{
-        if (err) {
-            return res.status(400).json({
-                ok: false,
-                mensaje: "Error al crear usuario.",
-                errors: err
-            });
-        }
-        res.status(201).json({
-            ok: true,
-            usuario: usuarioGuardado,
-            usuariotoken: req.usuario 
-            });
-    });
-});
 
 //========================================================================
 // Eliminar usuario por el id
 //========================================================================
 app.delete('/:id', mdAutenticacion.verificaToken,(req, res)=>{
     var id = req.params.id;
-    Usuario.findByIdAndRemove(id,(err, usuarioBorrado)=>{
+    Usuario.findByIdAndRemove(id,(err, usuarioEliminado)=>{
         if (err) {
             return res
                 .status(500)
@@ -121,7 +122,7 @@ app.delete('/:id', mdAutenticacion.verificaToken,(req, res)=>{
                     errors: err
                 });
         }
-        if (!usuarioBorrado) {
+        if (!usuarioEliminado) {
           return res
             .status(400)
             .json({
@@ -131,8 +132,8 @@ app.delete('/:id', mdAutenticacion.verificaToken,(req, res)=>{
             });
         }
         res.status(200).json({
-            ok: true,
-            mensaje: 'Usuario elimado.'
+           // ok: true, mensaje: 'Usuario elimado.'
+           ok: true, usuario: usuarioBorrado
         });
     });
 });

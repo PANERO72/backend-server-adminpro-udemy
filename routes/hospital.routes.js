@@ -16,7 +16,7 @@ app.get('/', (req, res, next)=>{
     .populate('usuario', 'nombre email')
     .exec((err, hospitales)=>{
         if(err){
-            return res.status(500).json({
+            return res.status(400).json({
                 ok: false,
                 mensaje: "Error cargando los hospitales.",
                 errors: err
@@ -25,7 +25,7 @@ app.get('/', (req, res, next)=>{
         Hospital.count({}, (err, conteo)=>{
             res.status(200).json({
                 ok: true,
-                hospital: hospitales,
+                hospitales: hospitales,
                 total: conteo
             });
         });
@@ -44,10 +44,10 @@ app.post("/", mdAutenticacion.verificaToken, (req, res) => {
         usuario: req.usuario._id
     });
 
-    hospital.save((err, hospitalGuardar)=>{
+    hospital.save((err, hospitalGuardado)=>{
         if (err) {
           return res
-            .status(400)
+            .status(500)
             .json({
               ok: false,
               mensaje: "Error al crear el hospital.",
@@ -56,7 +56,7 @@ app.post("/", mdAutenticacion.verificaToken, (req, res) => {
         }
         res.status(201).json({
             ok: true,
-            hospital: hospitalGuardar
+            hospital: hospitalGuardado, usuarioToken: req.usuario
         });
     });
     
@@ -88,6 +88,8 @@ app.put('/:id', mdAutenticacion.verificaToken, (req, res)=>{
             });
         }
         hospital.nombre = body.nombre;
+        hospital.usuario = req.usuario._id;
+
         hospital.save((err, hospitalGuardado)=>{
             if (err) {
               return res
@@ -110,7 +112,7 @@ app.put('/:id', mdAutenticacion.verificaToken, (req, res)=>{
 //========================================================================
 app.delete('/:id', mdAutenticacion.verificaToken, (req, res) => {
     var id = req.params.id;
-    Hospital.findByIdAndRemove(id, (err, hospitalGuardado) => {
+    Hospital.findByIdAndRemove(id, (err, hospitalEliminado) => {
         if (err) {
             return res
                 .status(500)
@@ -131,7 +133,7 @@ app.delete('/:id', mdAutenticacion.verificaToken, (req, res) => {
         }
         res.status(200).json({
             ok: true,
-            mensaje: 'Hospital eliminado.'
+            hospital: hospitalEliminado
         });
     });
 });

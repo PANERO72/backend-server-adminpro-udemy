@@ -2,7 +2,7 @@ var express = require("express");
 var app = express();
 
 var Hospital = require('../models/hospital');
-var Medicos = require('../models/medico');
+var Medico = require('../models/medico');
 var Usuario = require('../models/usuario');
 
 
@@ -64,10 +64,10 @@ app.get("/todo/:busqueda", (req, res, next) => {
 function buscarHospitales(busqueda, regex) {
     return new Promise((resolve, reject)=>{
         Hospital.find({ nombre: regex })
-        .populate('usuario', 'nombre email')
+        .populate('usuario', 'nombre email role')
         .exec((err, hospitales) => {
             if (err) {
-                reject('Error al cargar los hospitales.');
+                reject('Error al cargar los hospitales.', err);
             }else{
                 resolve(hospitales);
             }
@@ -78,12 +78,12 @@ function buscarHospitales(busqueda, regex) {
 
 function buscarMedico(busqueda, regex) {
     return new Promise((resolve, reject) => {
-        Medicos.find({ nombre: regex })
-        .populate('usuario', 'nombre email')
+        Medico.find({ nombre: regex })
+        .populate('usuario', 'nombre email role')
         .populate('hospital')
         .exec((err, medicos) => {
             if (err) {
-                reject('Error al cargar los médicos.');
+                reject('Error al cargar los médicos.', err);
             } else {
                 resolve(medicos);
             }
@@ -94,7 +94,7 @@ function buscarMedico(busqueda, regex) {
 function buscarUsuario(busqueda, regex) {
   return new Promise((resolve, reject) => {
     Usuario.find({},'nombre email role')
-    .or([{'nombre': regex}, {'email': regex}])
+    .or([{nombre: regex}, {email: regex}])
     .exec( (err, usuarios)=>{
         if(err){
             reject('Error al cargar los usuarios.', err);

@@ -24,7 +24,7 @@ async function verify(token) {
     });
 
     const payload = ticket.getPayload();
-    //const userid = payload['sub'];
+    const userid = payload['sub'];
     // If request specified a G Suite domain:
     //const domain = payload['hd'];
     return {
@@ -34,9 +34,10 @@ async function verify(token) {
         google: true
     }
 }
+
 app.post('/google',async (req, res)=>{
     var token = req.body.token;
-    var googleUser= await verify(token)
+    var googleUser = await verify(token)
                 .catch(e=>{
                     return res.status(403).json({
                         ok: false,
@@ -52,19 +53,17 @@ app.post('/google',async (req, res)=>{
             });
         }
         if(usuarioDB){
-            if( usuarioDB.google == false){
+            if( usuarioDB.google === false){
                 return res.status(400).json({
                     ok: true,
-                    mensaje: 'Debe de usar su autenticación normal.'
+                    mensaje: 'Debe de usar su autenticación normal.',
+                    errors: err                   
                 });
             }else{
-                var token = jwt.sign({ usuario: usuarioDB }, SEED, { expiresIn: 14400 }); // cuatro horas
-                res.status(200).json({
-                    ok: true,
-                    mensaje: 'Inicio de sesión correcto.',
-                    body: usuarioDB,
-                    token: token,
-                    id: usuarioDB._id
+                usuariodb.password = '****';
+                var token = jwt.sign({ usuario: usuarioDB }, SEED, { expiresIn: 86400 }); //24 horas
+                res.status(201).json({
+                    ok: true, usuario: usuariodb, token: token, id: usuariodb._id
                 });
             }
         }else{
@@ -76,28 +75,29 @@ app.post('/google',async (req, res)=>{
             usuario.google = true;
             usuario.password = '*****';
 
-            usuario.save((err, usuarioDB)=>{
-                var token = jwt.sign({ usuario: usuarioDB }, SEED, { expiresIn: 14400 }); // cuatro horas
-                res.status(200).json({
-                    ok: true,
-                    mensaje: 'Inicio de sesión correcto.',
-                    body: usuarioDB,
-                    token: token,
-                    id: usuarioDB._id
+            usuario.save((err, usuarioCreado)=>{
+                var token = jwt.sign({ usuario: usuarioCreado }, SEED, { expiresIn: 86400 }); //24 horas
+                res.status(201).json({
+                    ok: true, usuario: usuarioCreado, token: token, id: usuarioCreado._id 
                 });
             });
         }
     });
+
+    // res.status(200).json({
+    //     ok: true,
+    //     mensaje: 'Login google aceptado',
+    //     googleUser: googleUser
+    // });
     
 });
 
 //========================================================================
-// Login
+// Autentificacion normal
 //========================================================================
-
 app.post('/', (req, res)=>{
     var body = req.body;
-    Usuario.findOne({email: body.email}, (err, usuarioDB)=>{
+    Usuario.findOne({email: body.email}, (err, usuarioEncontrado)=>{
         if (err) {
             return res.status(500).json({
                 ok: false,
@@ -105,33 +105,34 @@ app.post('/', (req, res)=>{
                 errors: err
             });
         }
-        if(!usuarioDB){
+        if(!usuarioEncontrado){
             return res
               .status(400)
               .json({
                 ok: false,
                 mensaje: "Credenciales incorrectas.",
-                errors: err
+                errors: { message: 'Usuario no encontrado.'}
               });
         }
-        if(!bcrypt.compareSync(body.password, usuarioDB.password)){
+        if(!bcrypt.compareSync(body.password, usuarioEncontrado.password)){
             return res
                 .status(400)
                 .json({
                     ok: false,
                     mensaje: "Credenciales incorrectas.",
-                    errors: err
+                    errors: { message: 'Usuario no encontrado.'}
                 });
         }
         // Crear un token !
-        usuarioDB.password = ':)';
-        var token = jwt.sign({usuario: usuarioDB},SEED,{expiresIn: 14400}); // cuatro horas
-        res.status(200).json({
-            ok: true,
+        usuarioEncontrado.password = '****';
+        var token = jwt.sign({usuario: usuarioEncontrado},SEED,{expiresIn: 86400 }); //24 horas
+        res.status(201).json({
+            /*ok: true,
             mensaje: 'Inicio de sesión correcto.',
             body: usuarioDB,
             token: token,
-            id: usuarioDB._id
+            id: usuarioDB._id*/
+            ok: true, usuario: usuarioEncontrado, token: token, id: usuarioEncontrado._id 
         });
     });
 });

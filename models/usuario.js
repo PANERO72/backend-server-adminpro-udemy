@@ -6,7 +6,7 @@ var Schema = mongoose.Schema;
 var rolesValidos ={
     values: ['ADMIN_ROLE', 'USER_ROLE'],
     message: 'El role \'{VALUE}\' no está permitido.'
-}
+};
 
 var usuarioSchema = new Schema({
     nombre: {type: String, required: [true, 'El campo Nombre es obligatorio.']},
