@@ -47,7 +47,7 @@ app.use('/login', loginRoutes);
 app.use('/hospital', hospitalRoutes);
 app.use('/medico', medicoRoutes);
 app.use('/busqueda', busquedaRoutes);
-app.use("/subida", uploadRoutes);
+app.use("/upload", uploadRoutes);
 app.use("/img", imagenesRoutes);
 app.use('/', appRoutes);
 
@@ -60,8 +60,6 @@ app.listen(3000, () =>{
 //Arrancar con nodemon
 // npm start
 //==========================
-
-
 
 //==========================
 //Encender apagar bbdd:
