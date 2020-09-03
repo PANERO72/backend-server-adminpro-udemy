@@ -15,7 +15,7 @@ app.put("/:tipo/:id", (req, res, next) => {
   var id = req.params.id;
 
   // tipos de colección
-  var tiposValidos = ['hospitales','medicos','usuarios'];
+  var tiposValidos = ['hospital','medico','usuario'];
   if(tiposValidos.indexOf(tipo)<0){
     return res.status(400).json({
       ok: false,
@@ -28,7 +28,7 @@ app.put("/:tipo/:id", (req, res, next) => {
     return res.status(400).json({
       ok: false,
       mensaje: "No se seleccionó nada.",
-      errors: {message:  'Debe de seleccionar una imagen.'}
+      errors: {message: 'Debe de seleccionar una imagen.'}
     });
   }
   // obtener nombre del archivo
@@ -49,7 +49,7 @@ app.put("/:tipo/:id", (req, res, next) => {
   var nombreArchivo = `${id}-${new Date().getMilliseconds()}.${extensionArchivo}`;
 
   // mover el archivo a un path
-  var path = `./uploads/${tipo}/${nombreArchivo}`;
+  var path = `./upload/${tipo}/${nombreArchivo}`;
   archivo.mv(path, err=>{
     if(err){
       return res
@@ -70,7 +70,7 @@ app.put("/:tipo/:id", (req, res, next) => {
 });
 
 function subirPorTipo(tipo, id, nombreArchivo, res){
-  if(tipo === 'usuarios'){
+  if(tipo === 'usuario'){
     Usuario.findById(id, (err, usuario)=>{
       if(!usuario){
         return res.status(400).json({
@@ -79,7 +79,7 @@ function subirPorTipo(tipo, id, nombreArchivo, res){
           errors: {message: 'El Usuario no existe.'} 
         });
       }
-      var pathViejo = './uploads/usuarios/'+ usuario.img;
+      var pathViejo = './upload/usuario/'+ usuario.img;
 
       // si existe elimina la imagen anterior
       if(fs.existsSync(pathViejo)){
@@ -97,7 +97,7 @@ function subirPorTipo(tipo, id, nombreArchivo, res){
     });
   }
   // fin de la verificación de usuarios
-  if(tipo === 'medicos'){
+  if(tipo === 'medico'){
     Medico.findById(id ,(err, medico)=>{
       if (!medico) {
         return res.status(400).json({
@@ -107,7 +107,7 @@ function subirPorTipo(tipo, id, nombreArchivo, res){
         });
       }
 
-      var pathViejo = './uploads/medicos/' + medico.img;
+      var pathViejo = './upload/medico/' + medico.img;
 
       // si existe elimina la imagen anterior
       if (fs.existsSync(pathViejo)) {
@@ -127,7 +127,7 @@ function subirPorTipo(tipo, id, nombreArchivo, res){
     });
   }
   //Fin de la verificación de médicos
-  if(tipo === 'hospitales'){
+  if(tipo === 'hospital'){
     Hospital.findById(id, (err, hospital)=>{
       if (!hospital) {
         return res
@@ -138,7 +138,7 @@ function subirPorTipo(tipo, id, nombreArchivo, res){
             errors: { message: "El Hospital no existe." }
           });
       }
-      var pathViejo = './uploads/hospitales/' + hospital.img;
+      var pathViejo = './upload/hospital/' + hospital.img;
 
       // si existe elimina la imagen anterior
       if (fs.existsSync(pathViejo)) {
